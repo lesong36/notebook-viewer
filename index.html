@@ -1263,9 +1263,9 @@ _display_outputs = []
             canvas.dispatchEvent(new MouseEvent('mouseup', {}));
         });
 
-        // ✨ Hover 检测：使用 Pointer Events（Apple Pencil 悬停时 pressure === 0）
-        canvas.addEventListener('pointermove', handlePointerMove);
-        canvas.addEventListener('pointerleave', handlePointerLeave);
+        // ✨ Hover 检测：绑定到 document（因为 canvas 在非激活状态下 pointer-events: none）
+        document.addEventListener('pointermove', handlePointerMove, { passive: true });
+        document.addEventListener('pointerleave', handlePointerLeave, { passive: true });
 
         function handlePointerMove(e) {
             // 只处理 Apple Pencil
