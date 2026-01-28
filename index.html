@@ -813,6 +813,29 @@
             autoActivated: false         // 是否由 hover 自动激活
         };
 
+        // ✨ 长按切换工具状态（与原版 GlobalDrawingCanvas.js 完全一致）
+        const longPressState = {
+            timer: null,                 // 长按定时器
+            startX: 0,                   // 起始 X 坐标
+            startY: 0,                   // 起始 Y 坐标
+            isActive: false,             // 是否正在长按中
+            hasMoved: false              // 是否已经移动（移动则取消长按）
+        };
+
+        // ✨ 事件处理函数引用（用于正确添加/移除事件监听器）
+        const handlers = {
+            mousedown: null,
+            mousemove: null,
+            mouseup: null,
+            touchstart: null,
+            touchmove: null,
+            touchend: null,
+            pointerdown: null,
+            pointerup: null,
+            pointermove: null,
+            pointerleave: null
+        };
+
         // ✨ 判断是否为 Apple Pencil（触控笔）- 完全复制原版 GlobalDrawingCanvas.js
         function isStylus(touch) {
             // 标准方式：检查 touchType 属性
@@ -1252,26 +1275,89 @@ _display_outputs = []
 
         let currentStroke = null;
 
+        // ==================== 长按切换工具功能（与原版 GlobalDrawingCanvas.js 完全一致）====================
+
+        // ✨ 启动长按检测（1秒切换工具）
+        function startLongPressDetection(x, y) {
+            const lp = longPressState;
+            lp.startX = x;
+            lp.startY = y;
+            lp.isActive = true;
+            lp.hasMoved = false;
+
+            // 清除旧的定时器
+            if (lp.timer) {
+                clearTimeout(lp.timer);
+            }
+
+            // 启动1秒定时器
+            lp.timer = setTimeout(() => {
+                // 1秒后检查是否仍在长按且没有移动
+                if (lp.isActive && !lp.hasMoved) {
+                    // 切换工具
+                    const newTool = currentTool === 'pen' ? 'eraser' : 'pen';
+                    setTool(newTool);
+
+                    // 显示提示
+                    const text = newTool === 'pen' ? '✏️ 画笔' : '🧹 橡皮擦';
+                    showToast(`${text}（长按1秒切换）`, 'success');
+                    console.log(`⏱️ 长按1秒切换 → ${text}`);
+
+                    // 震动反馈（如果支持）
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
+                }
+            }, 1000); // 1秒
+        }
+
+        // ✨ 检查长按移动距离
+        function checkLongPressMovement(x, y) {
+            const lp = longPressState;
+            if (lp.isActive && !lp.hasMoved) {
+                const distance = Math.sqrt(
+                    Math.pow(x - lp.startX, 2) +
+                    Math.pow(y - lp.startY, 2)
+                );
+
+                // 移动超过10px，取消长按检测
+                if (distance > 10) {
+                    lp.hasMoved = true;
+                    console.log('🚫 长按检测取消（移动距离过大）');
+                }
+            }
+        }
+
+        // ✨ 取消长按检测
+        function cancelLongPressDetection() {
+            const lp = longPressState;
+            lp.isActive = false;
+            if (lp.timer) {
+                clearTimeout(lp.timer);
+                lp.timer = null;
+            }
+        }
+
         // ==================== 事件绑定到 document（完全复制原版 GlobalDrawingCanvas.js）====================
         // 重要：canvas 在非激活状态下 pointer-events: none，所以事件必须绑定到 document
 
         // 鼠标按下
-        document.addEventListener('mousedown', e => {
+        handlers.mousedown = (e) => {
             if (!drawingActive) return;
             // 检查点击是否在内容区域内
             const contentWrapper = document.getElementById('content-wrapper');
             if (!contentWrapper.contains(e.target) && e.target !== canvas) return;
             startDrawing(e);
-        }, true);
+        };
 
         // 鼠标移动
-        document.addEventListener('mousemove', draw);
+        handlers.mousemove = draw;
 
         // 鼠标抬起
-        document.addEventListener('mouseup', stopDrawing);
+        handlers.mouseup = stopDrawing;
 
         // ✨ 触摸事件（支持 Apple Pencil）- 完全复制原版
-        document.addEventListener('touchstart', e => {
+        handlers.touchstart = (e) => {
             if (!drawingActive) return; // ✨ 关键：只有在涂鸦激活时才处理
 
             // ⚠️ iPad优化：只处理单点触摸
@@ -1284,6 +1370,9 @@ _display_outputs = []
 
             // 如果是 Apple Pencil，检查是否在内容区域
             if (isApplePencil) {
+                // ✨ 启动长按检测（1秒切换工具）
+                startLongPressDetection(touch.clientX, touch.clientY);
+
                 const contentWrapper = document.getElementById('content-wrapper');
                 const rect = contentWrapper.getBoundingClientRect();
                 if (touch.clientX < rect.left || touch.clientX > rect.right ||
@@ -1317,9 +1406,9 @@ _display_outputs = []
                 // 不调用 preventDefault()，让系统处理滚动
                 return;
             }
-        }, { passive: false, capture: true });
+        };
 
-        document.addEventListener('touchmove', e => {
+        handlers.touchmove = (e) => {
             if (!drawingActive || !isDrawing) return;
 
             // ⚠️ 手掌防误触：检查触摸数量和类型
@@ -1337,6 +1426,9 @@ _display_outputs = []
                 stopDrawing();
                 return;
             }
+
+            // ✨ 长按移动检测：如果移动超过10px，取消长按
+            checkLongPressMovement(touch.clientX, touch.clientY);
 
             // ✅ Apple Pencil 移动：阻止滚动，执行绘制
             e.preventDefault();
@@ -1361,9 +1453,9 @@ _display_outputs = []
 
             lastX = contentX;
             lastY = contentY;
-        }, { passive: false });
+        };
 
-        document.addEventListener('touchend', e => {
+        handlers.touchend = (e) => {
             if (isDrawing) {
                 // 检查是否是 Apple Pencil 结束
                 const touch = e.changedTouches?.[0];
@@ -1371,17 +1463,33 @@ _display_outputs = []
                     // Apple Pencil 抬起：阻止可能的滚动惯性
                     e.preventDefault();
                 }
+
+                // ✨ 取消长按检测
+                cancelLongPressDetection();
+
                 stopDrawing();
             }
-        });
+        };
 
-        // ✨ Hover 检测：绑定到 document（因为 canvas 在非激活状态下 pointer-events: none）
-        document.addEventListener('pointermove', handlePointerMove, { passive: true });
-        document.addEventListener('pointerleave', handlePointerLeave, true);
-
-        function handlePointerMove(e) {
+        // ✨ Hover 检测
+        handlers.pointermove = (e) => {
             // 只处理 Apple Pencil
             if (e.pointerType !== 'pen') return;
+
+            // ✨ 长按移动检测：如果移动超过10px，取消长按
+            const lp = longPressState;
+            if (lp.isActive && !lp.hasMoved) {
+                const distance = Math.sqrt(
+                    Math.pow(e.clientX - lp.startX, 2) +
+                    Math.pow(e.clientY - lp.startY, 2)
+                );
+
+                // 移动超过10px，取消长按检测
+                if (distance > 10) {
+                    lp.hasMoved = true;
+                    console.log('🚫 长按检测取消（移动距离过大）');
+                }
+            }
 
             // 判断是否悬停（pressure === 0 表示笔未接触屏幕）
             const hovering = e.pressure === 0;
@@ -1399,9 +1507,9 @@ _display_outputs = []
                 cancelHoverActivation(); // 取消激活计时
                 console.log('🖊️ Apple Pencil 接触屏幕');
             }
-        }
+        };
 
-        function handlePointerLeave(e) {
+        handlers.pointerleave = (e) => {
             // 只处理 Apple Pencil
             if (e.pointerType !== 'pen') return;
 
@@ -1420,7 +1528,19 @@ _display_outputs = []
                     console.log('🖊️ Apple Pencil 离开（手动激活模式，不自动关闭）');
                 }
             }
-        }
+        };
+
+        // ==================== 添加事件监听（与原版完全一致）====================
+        document.addEventListener('mousedown', handlers.mousedown, true);
+        document.addEventListener('mousemove', handlers.mousemove);
+        document.addEventListener('mouseup', handlers.mouseup);
+        document.addEventListener('touchstart', handlers.touchstart, { passive: false, capture: true });
+        document.addEventListener('touchmove', handlers.touchmove, { passive: false });
+        document.addEventListener('touchend', handlers.touchend);
+
+        // ✨ Hover 检测监听器
+        document.addEventListener('pointermove', handlers.pointermove, { passive: true });
+        document.addEventListener('pointerleave', handlers.pointerleave, true);
 
         // ✨ Hover 激活：300ms 后自动开启涂鸦
         function startHoverActivation() {
