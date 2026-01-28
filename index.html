@@ -905,10 +905,10 @@
                 }
             }
 
-            // 无法确定：默认保守处理
-            // 在画笔模式下，假设是 Apple Pencil（允许绘制）
-            updateDebugResult(true, 'fallback=true');
-            return true;
+            // 无法确定：严格模式 - 拒绝绘制
+            // 只有确认是 Apple Pencil 才允许绘制，其他情况一律拒绝
+            updateDebugResult(false, 'fallback=false (strict)');
+            return false;
         }
 
         // ✨ iPad 调试面板功能
