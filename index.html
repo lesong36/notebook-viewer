@@ -850,6 +850,15 @@
             hasMoved: false              // 是否已经移动（移动则取消长按）
         };
 
+        // ✨ Apple Pencil Pro Barrel Button 状态
+        const barrelButton = {
+            pressed: false,              // 按钮是否按下
+            pressStartTime: 0,           // 按下开始时间
+            longPressTimer: null,        // 长按定时器
+            longPressTriggered: false,   // 是否已触发长按
+            toolBeforePress: 'pen'       // 长按前的工具类型
+        };
+
         // ✨ 事件处理函数引用（用于正确添加/移除事件监听器）
         const handlers = {
             mousedown: null,
@@ -1429,6 +1438,98 @@ _display_outputs = []
             }
         }
 
+        // ==================== Apple Pencil Pro Barrel Button 支持 ====================
+
+        // ✨ Barrel Button 长按处理：切换到橡皮擦
+        function handleBarrelButtonLongPress() {
+            if (!drawingActive) return;
+
+            // 记住长按前的工具
+            barrelButton.toolBeforePress = currentTool;
+
+            // 切换到橡皮擦
+            if (currentTool !== 'eraser') {
+                setTool('eraser');
+                showToast('🧹 橡皮擦（长按中）', 'success');
+                console.log('🧹 Barrel Button 长按 → 橡皮擦');
+            }
+
+            barrelButton.longPressTriggered = true;
+        }
+
+        // ✨ Barrel Button 松开处理：恢复画笔
+        function handleBarrelButtonRelease() {
+            // 清除长按定时器
+            if (barrelButton.longPressTimer) {
+                clearTimeout(barrelButton.longPressTimer);
+                barrelButton.longPressTimer = null;
+            }
+
+            // 如果触发了长按（橡皮擦模式），松开时恢复
+            if (barrelButton.longPressTriggered) {
+                setTool(barrelButton.toolBeforePress);
+                showToast('✏️ 画笔', 'success');
+                console.log('✏️ 松开恢复 → 画笔');
+            }
+
+            // 重置状态
+            barrelButton.pressed = false;
+            barrelButton.pressStartTime = 0;
+            barrelButton.longPressTriggered = false;
+        }
+
+        // ✨ Pointer Down - 检测 Apple Pencil Pro 按钮按下
+        handlers.pointerdown = (e) => {
+            // 只处理 Apple Pencil (pen type)
+            if (e.pointerType !== 'pen') return;
+            if (!drawingActive) return;
+
+            // ✨ 启动长按检测（1秒切换工具）
+            startLongPressDetection(e.clientX, e.clientY);
+
+            // 检测 barrel button (侧边按钮)
+            // buttons 位掩码：
+            // - 1: 主按钮（笔尖接触）
+            // - 2: 次要按钮
+            // - 4: 辅助按钮
+            // - 32: Apple Pencil barrel button (第5个按钮)
+            const hasBarrelButton = (e.buttons & 32) !== 0;
+
+            if (hasBarrelButton && !barrelButton.pressed) {
+                // 按钮刚刚按下
+                barrelButton.pressed = true;
+                barrelButton.pressStartTime = Date.now();
+                barrelButton.longPressTriggered = false;
+
+                // 设置长按定时器（500ms）
+                barrelButton.longPressTimer = setTimeout(() => {
+                    handleBarrelButtonLongPress();
+                }, 500);
+
+                console.log('✋ Barrel Button 按下');
+                addDebugLog('✋ Barrel Button 按下');
+            }
+        };
+
+        // ✨ Pointer Up - 检测 Apple Pencil Pro 按钮松开
+        handlers.pointerup = (e) => {
+            // 只处理 Apple Pencil
+            if (e.pointerType !== 'pen') return;
+
+            // ✨ 取消长按检测
+            cancelLongPressDetection();
+
+            // 检查按钮是否松开
+            const hasBarrelButton = (e.buttons & 32) !== 0;
+
+            if (!hasBarrelButton && barrelButton.pressed) {
+                // 按钮松开
+                console.log('🖐️ Barrel Button 松开');
+                addDebugLog('🖐️ Barrel Button 松开');
+                handleBarrelButtonRelease();
+            }
+        };
+
         // ==================== 事件绑定到 document（完全复制原版 GlobalDrawingCanvas.js）====================
         // 重要：canvas 在非激活状态下 pointer-events: none，所以事件必须绑定到 document
 
@@ -1632,6 +1733,10 @@ _display_outputs = []
         // ✨ Hover 检测监听器
         document.addEventListener('pointermove', handlers.pointermove, { passive: true });
         document.addEventListener('pointerleave', handlers.pointerleave, true);
+
+        // ✨ Apple Pencil Pro Barrel Button 监听器
+        document.addEventListener('pointerdown', handlers.pointerdown);
+        document.addEventListener('pointerup', handlers.pointerup);
 
         // ✨ Hover 激活：300ms 后自动开启涂鸦
         function startHoverActivation() {
