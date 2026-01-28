@@ -1479,29 +1479,29 @@ _display_outputs = []
         }
 
         // ✨ Pointer Down - 检测 Apple Pencil Pro 按钮按下
+        // 注意：Safari 把 Apple Pencil 报告为 pointerType='touch' 而不是 'pen'
         handlers.pointerdown = (e) => {
             // 记录所有 pointerdown 事件的详细信息
-            addDebugLog(`pointerdown: type=${e.pointerType} btn=${e.button} btns=${e.buttons}`);
+            const tangential = e.tangentialPressure !== undefined ? e.tangentialPressure.toFixed(2) : 'N/A';
+            const twist = e.twist !== undefined ? e.twist : 'N/A';
+            addDebugLog(`ptrdn: t=${e.pointerType} btn=${e.button} btns=${e.buttons} tang=${tangential} twist=${twist}`);
 
-            // 只处理 Apple Pencil (pen type)
-            if (e.pointerType !== 'pen') return;
-
-            // 即使 drawingActive 为 false 也记录日志
-            addDebugLog(`✏️ pen down: button=${e.button} buttons=${e.buttons} active=${drawingActive}`);
+            // 接受 'pen' 或 'touch' 类型（Safari 把 Apple Pencil 报告为 touch）
+            if (e.pointerType !== 'pen' && e.pointerType !== 'touch') return;
 
             if (!drawingActive) return;
 
             // ✨ 启动长按检测（1秒切换工具）
             startLongPressDetection(e.clientX, e.clientY);
 
-            // 检测 barrel button (侧边按钮)
-            // buttons 位掩码：
-            // - 1: 主按钮（笔尖接触）
-            // - 2: 次要按钮
-            // - 4: 辅助按钮
-            // - 32: Apple Pencil barrel button (第5个按钮)
-            // 也尝试检测 button 值（可能是 5 表示 barrel button）
-            const hasBarrelButton = (e.buttons & 32) !== 0 || e.button === 5;
+            // 检测 barrel button / squeeze button
+            // 可能的检测方式：
+            // 1. buttons 位掩码 32 (第5个按钮)
+            // 2. button 值为 5
+            // 3. tangentialPressure > 0 (Apple Pencil Pro 挤压)
+            const hasBarrelButton = (e.buttons & 32) !== 0 ||
+                e.button === 5 ||
+                (e.tangentialPressure !== undefined && e.tangentialPressure > 0);
 
             if (hasBarrelButton && !barrelButton.pressed) {
                 // 按钮刚刚按下
