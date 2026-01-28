@@ -813,23 +813,35 @@
             autoActivated: false         // 是否由 hover 自动激活
         };
 
-        // ✨ 判断是否为 Apple Pencil（触控笔）
+        // ✨ 判断是否为 Apple Pencil（触控笔）- 完全复制原版 GlobalDrawingCanvas.js
         function isStylus(touch) {
             // 标准方式：检查 touchType 属性
+            // touchType: 'stylus' - Apple Pencil
+            // touchType: 'direct' - 手指直接触摸
             if (touch.touchType !== undefined) {
                 return touch.touchType === 'stylus';
             }
+
             // 降级方案：检查触摸半径（radiusX/radiusY）
             // Apple Pencil 的触摸半径通常很小（<8）
             // 手指的触摸半径较大（>10）
             // 手掌的触摸半径非常大（>20）
             if (touch.radiusX !== undefined && touch.radiusY !== undefined) {
                 const avgRadius = (touch.radiusX + touch.radiusY) / 2;
-                if (avgRadius < 8) return true;  // 很可能是 Apple Pencil
-                if (avgRadius > 15) return false; // 肯定不是 Apple Pencil
+                // 如果平均半径小于8，很可能是 Apple Pencil
+                if (avgRadius < 8) {
+                    return true;
+                }
+                // 如果半径很大（>15），肯定不是 Apple Pencil
+                if (avgRadius > 15) {
+                    return false;
+                }
             }
-            // 无法确定：默认不是笔（严格模式，防止误触）
-            return false;
+
+            // 无法确定：默认保守处理
+            // 在画笔模式下，假设是 Apple Pencil（允许绘制）
+            // 这样即使检测失败，用户仍然可以绘制，只是可能无法完美区分手指和笔
+            return true;
         }
 
         // ==================== 文件处理 ====================
@@ -1240,10 +1252,10 @@ _display_outputs = []
 
         let currentStroke = null;
 
-        // ==================== 事件绑定到 document（与原版 GlobalDrawingCanvas 一致）====================
+        // ==================== 事件绑定到 document（完全复制原版 GlobalDrawingCanvas.js）====================
         // 重要：canvas 在非激活状态下 pointer-events: none，所以事件必须绑定到 document
 
-        // 鼠标事件（用于桌面调试）
+        // 鼠标按下
         document.addEventListener('mousedown', e => {
             if (!drawingActive) return;
             // 检查点击是否在内容区域内
@@ -1251,144 +1263,161 @@ _display_outputs = []
             if (!contentWrapper.contains(e.target) && e.target !== canvas) return;
             startDrawing(e);
         }, true);
+
+        // 鼠标移动
         document.addEventListener('mousemove', draw);
+
+        // 鼠标抬起
         document.addEventListener('mouseup', stopDrawing);
 
-        // ✨ 触摸事件（Apple Pencil / 手指）
+        // ✨ 触摸事件（支持 Apple Pencil）- 完全复制原版
         document.addEventListener('touchstart', e => {
-            // 多点触摸（可能是手掌）：不处理
+            if (!drawingActive) return; // ✨ 关键：只有在涂鸦激活时才处理
+
+            // ⚠️ iPad优化：只处理单点触摸
             if (e.touches.length !== 1) return;
 
-            const t = e.touches[0];
+            const touch = e.touches[0];
 
-            // 检查触摸是否在内容区域内
-            const contentWrapper = document.getElementById('content-wrapper');
-            const rect = contentWrapper.getBoundingClientRect();
-            if (t.clientX < rect.left || t.clientX > rect.right ||
-                t.clientY < rect.top || t.clientY > rect.bottom) {
-                return; // 触摸在内容区域外，忽略
+            // ✨ 关键：检测 Apple Pencil
+            const isApplePencil = isStylus(touch);
+
+            // 如果是 Apple Pencil，检查是否在内容区域
+            if (isApplePencil) {
+                const contentWrapper = document.getElementById('content-wrapper');
+                const rect = contentWrapper.getBoundingClientRect();
+                if (touch.clientX < rect.left || touch.clientX > rect.right ||
+                    touch.clientY < rect.top || touch.clientY > rect.bottom) {
+                    return; // 触摸在内容区域外，忽略
+                }
+
+                // ✅ Apple Pencil：阻止滚动和默认行为
+                e.preventDefault();
+                e.stopPropagation();
+
+                isDrawing = true;
+                const scrollTop = contentWrapper?.scrollTop || 0;
+                const canvasRect = canvas.getBoundingClientRect();
+                const screenX = touch.clientX - canvasRect.left;
+                const screenY = touch.clientY - canvasRect.top;
+                lastX = screenX;
+                lastY = screenY + scrollTop;
+                currentStroke = { tool: currentTool, color: currentColor, width: currentLineWidth, points: [{ x: lastX, y: lastY }] };
+
+                // 应用笔刷设置
+                ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor;
+                ctx.lineWidth = currentTool === 'eraser' ? currentLineWidth * 3 : currentLineWidth;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
+                ctx.beginPath();
+                ctx.moveTo(screenX, screenY);
+            } else {
+                // 🖐️ 手指触摸：不处理绘制，允许滚动
+                // 不调用 preventDefault()，让系统处理滚动
+                return;
             }
-
-            // ✨ 只允许 Apple Pencil 触摸
-            if (!isStylus(t)) {
-                console.log('🖐️ 手指触摸，忽略（仅允许 Apple Pencil）');
-                return; // 不调用 preventDefault，允许滚动
-            }
-
-            // ✨ Apple Pencil 检测到：如果涂鸦未激活，自动激活
-            if (!drawingActive) {
-                toggleDrawing();
-                hoverState.autoActivated = true;
-                showToast('✨ Apple Pencil 激活涂鸦', 'success');
-                console.log('✅ Apple Pencil 触摸检测到，自动激活涂鸦模式');
-            }
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            // 开始绘制
-            isDrawing = true;
-            const scrollTop = contentWrapper?.scrollTop || 0;
-            const canvasRect = canvas.getBoundingClientRect();
-            const screenX = t.clientX - canvasRect.left;
-            const screenY = t.clientY - canvasRect.top;
-            lastX = screenX;
-            lastY = screenY + scrollTop;
-            currentStroke = { tool: currentTool, color: currentColor, width: currentLineWidth, points: [{ x: lastX, y: lastY }] };
         }, { passive: false, capture: true });
 
         document.addEventListener('touchmove', e => {
-            if (!isDrawing) return;
+            if (!drawingActive || !isDrawing) return;
 
-            // ⚠️ 手掌防误触：多点触摸时停止绘制
+            // ⚠️ 手掌防误触：检查触摸数量和类型
             if (e.touches.length !== 1) {
+                // 多点触摸（可能是手掌）：停止绘制
                 stopDrawing();
                 return;
             }
 
-            const t = e.touches[0];
+            const touch = e.touches[0];
 
-            // ✨ 非 Apple Pencil 触摸时停止绘制
-            if (!isStylus(t)) {
+            // ✨ 只处理 Apple Pencil 的移动
+            if (!isStylus(touch)) {
+                // 非 Apple Pencil（可能是手掌误触）：停止绘制
                 stopDrawing();
                 return;
             }
 
+            // ✅ Apple Pencil 移动：阻止滚动，执行绘制
             e.preventDefault();
             e.stopPropagation();
 
-            // 执行绘制
             const contentWrapper = document.getElementById('content-wrapper');
             const scrollTop = contentWrapper?.scrollTop || 0;
             const canvasRect = canvas.getBoundingClientRect();
-            const screenX = t.clientX - canvasRect.left;
-            const screenY = t.clientY - canvasRect.top;
+            const screenX = touch.clientX - canvasRect.left;
+            const screenY = touch.clientY - canvasRect.top;
             const contentX = screenX;
             const contentY = screenY + scrollTop;
-            currentStroke.points.push({ x: contentX, y: contentY });
 
-            ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor;
-            ctx.lineWidth = currentTool === 'eraser' ? currentLineWidth * 3 : currentLineWidth;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
-            ctx.beginPath();
-            const lastScreenY = lastY - scrollTop;
-            ctx.moveTo(lastX, lastScreenY);
+            // 绘制线条
             ctx.lineTo(screenX, screenY);
             ctx.stroke();
+
+            // 记录笔划点
+            if (currentStroke) {
+                currentStroke.points.push({ x: contentX, y: contentY });
+            }
+
             lastX = contentX;
             lastY = contentY;
         }, { passive: false });
 
         document.addEventListener('touchend', e => {
             if (isDrawing) {
-                e.preventDefault();
-                stopDrawing();
-
-                // ✨ 如果是自动激活的，设置 3 秒后自动关闭
-                if (hoverState.autoActivated && drawingActive) {
-                    startHoverDeactivation();
+                // 检查是否是 Apple Pencil 结束
+                const touch = e.changedTouches?.[0];
+                if (touch && isStylus(touch)) {
+                    // Apple Pencil 抬起：阻止可能的滚动惯性
+                    e.preventDefault();
                 }
+                stopDrawing();
             }
         });
 
         // ✨ Hover 检测：绑定到 document（因为 canvas 在非激活状态下 pointer-events: none）
         document.addEventListener('pointermove', handlePointerMove, { passive: true });
-        document.addEventListener('pointerleave', handlePointerLeave, { passive: true });
+        document.addEventListener('pointerleave', handlePointerLeave, true);
 
         function handlePointerMove(e) {
             // 只处理 Apple Pencil
             if (e.pointerType !== 'pen') return;
 
+            // 判断是否悬停（pressure === 0 表示笔未接触屏幕）
             const hovering = e.pressure === 0;
             const wasHovering = hoverState.isHovering;
 
             if (hovering && !wasHovering) {
                 // 🟢 开始悬停
                 hoverState.isHovering = true;
-                cancelHoverDeactivation();
-                startHoverActivation();
+                cancelHoverDeactivation(); // 取消关闭计时
+                startHoverActivation();     // 开始激活计时（300ms）
                 console.log('🖊️ Apple Pencil 开始悬停');
             } else if (!hovering && wasHovering) {
                 // 🔴 笔接触屏幕，停止悬停
                 hoverState.isHovering = false;
-                cancelHoverActivation();
+                cancelHoverActivation(); // 取消激活计时
                 console.log('🖊️ Apple Pencil 接触屏幕');
             }
         }
 
         function handlePointerLeave(e) {
+            // 只处理 Apple Pencil
             if (e.pointerType !== 'pen') return;
 
-            if (hoverState.isHovering) {
+            const wasHovering = hoverState.isHovering;
+
+            if (wasHovering) {
+                // 笔离开屏幕
                 hoverState.isHovering = false;
-                cancelHoverActivation();
+                cancelHoverActivation(); // 取消激活计时
 
                 // 仅当由 hover 自动激活时，才启动关闭计时
                 if (hoverState.autoActivated && drawingActive) {
-                    startHoverDeactivation();
-                    console.log('🖊️ Apple Pencil 离开，3s 后自动关闭涂鸦');
+                    startHoverDeactivation(); // 3000ms 后关闭
+                    console.log('🖊️ Apple Pencil 离开，3000ms 后自动关闭');
+                } else {
+                    console.log('🖊️ Apple Pencil 离开（手动激活模式，不自动关闭）');
                 }
             }
         }
