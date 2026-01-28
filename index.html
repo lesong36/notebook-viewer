@@ -789,6 +789,34 @@
         </div>
     </div>
 
+    <!-- iPad 调试面板 -->
+    <div id="ipad-debug-panel" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.85);
+        color: #0f0;
+        font-family: monospace;
+        font-size: 12px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        z-index: 99999;
+        max-width: 280px;
+        display: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    ">
+        <div style="font-weight: bold; margin-bottom: 8px; color: #fff;">🔧 iPad 调试面板</div>
+        <div id="debug-touch-type">touchType: -</div>
+        <div id="debug-radius">radius: -</div>
+        <div id="debug-force">force: -</div>
+        <div id="debug-is-stylus" style="font-weight: bold; margin-top: 4px;">isStylus: -</div>
+        <div id="debug-drawing-active" style="color: #ff0;">drawingActive: -</div>
+        <div id="debug-log" style="margin-top: 8px; max-height: 60px; overflow-y: auto; font-size: 10px; color: #aaa;">
+        </div>
+        <button onclick="document.getElementById('ipad-debug-panel').style.display='none'"
+            style="margin-top: 8px; font-size: 10px; padding: 4px 8px; cursor: pointer;">关闭面板</button>
+    </div>
+
     <script type="module">
         let currentNotebook = null;
         let currentFileName = '';
@@ -838,11 +866,16 @@
 
         // ✨ 判断是否为 Apple Pencil（触控笔）- 完全复制原版 GlobalDrawingCanvas.js
         function isStylus(touch) {
+            // 更新调试面板
+            updateDebugPanel(touch);
+
             // 标准方式：检查 touchType 属性
             // touchType: 'stylus' - Apple Pencil
             // touchType: 'direct' - 手指直接触摸
             if (touch.touchType !== undefined) {
-                return touch.touchType === 'stylus';
+                const result = touch.touchType === 'stylus';
+                updateDebugResult(result, `touchType=${touch.touchType}`);
+                return result;
             }
 
             // 降级方案：检查触摸半径（radiusX/radiusY）
@@ -853,19 +886,77 @@
                 const avgRadius = (touch.radiusX + touch.radiusY) / 2;
                 // 如果平均半径小于8，很可能是 Apple Pencil
                 if (avgRadius < 8) {
+                    updateDebugResult(true, `avgRadius=${avgRadius.toFixed(1)}<8`);
                     return true;
                 }
                 // 如果半径很大（>15），肯定不是 Apple Pencil
                 if (avgRadius > 15) {
+                    updateDebugResult(false, `avgRadius=${avgRadius.toFixed(1)}>15`);
                     return false;
                 }
             }
 
             // 无法确定：默认保守处理
             // 在画笔模式下，假设是 Apple Pencil（允许绘制）
-            // 这样即使检测失败，用户仍然可以绘制，只是可能无法完美区分手指和笔
+            updateDebugResult(true, 'fallback=true');
             return true;
         }
+
+        // ✨ iPad 调试面板功能
+        function updateDebugPanel(touch) {
+            const panel = document.getElementById('ipad-debug-panel');
+            if (!panel) return;
+
+            document.getElementById('debug-touch-type').textContent =
+                `touchType: ${touch.touchType !== undefined ? touch.touchType : 'undefined'}`;
+            document.getElementById('debug-radius').textContent =
+                `radius: X=${touch.radiusX?.toFixed(1) || '-'} Y=${touch.radiusY?.toFixed(1) || '-'} avg=${((touch.radiusX + touch.radiusY) / 2).toFixed(1) || '-'}`;
+            document.getElementById('debug-force').textContent =
+                `force: ${touch.force !== undefined ? touch.force.toFixed(2) : 'undefined'}`;
+            document.getElementById('debug-drawing-active').textContent =
+                `drawingActive: ${drawingActive}`;
+        }
+
+        function updateDebugResult(result, reason) {
+            const el = document.getElementById('debug-is-stylus');
+            if (el) {
+                el.textContent = `isStylus: ${result} (${reason})`;
+                el.style.color = result ? '#0f0' : '#f00';
+            }
+            addDebugLog(`isStylus=${result}: ${reason}`);
+        }
+
+        function addDebugLog(msg) {
+            const log = document.getElementById('debug-log');
+            if (log) {
+                const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                log.innerHTML = `<div>${time} ${msg}</div>` + log.innerHTML;
+                // 只保留最近 10 条
+                while (log.children.length > 10) {
+                    log.removeChild(log.lastChild);
+                }
+            }
+        }
+
+        // ✨ 三击显示调试面板
+        let tapCount = 0;
+        let tapTimer = null;
+        document.addEventListener('touchend', e => {
+            if (e.touches.length === 0 && e.changedTouches.length === 1) {
+                tapCount++;
+                clearTimeout(tapTimer);
+                tapTimer = setTimeout(() => {
+                    if (tapCount >= 3) {
+                        const panel = document.getElementById('ipad-debug-panel');
+                        if (panel) {
+                            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+                            showToast('🔧 调试面板已' + (panel.style.display === 'none' ? '关闭' : '打开'), 'info');
+                        }
+                    }
+                    tapCount = 0;
+                }, 400);
+            }
+        }, { passive: true });
 
         // ==================== 文件处理 ====================
         window.handleFileSelect = async function (event) {
