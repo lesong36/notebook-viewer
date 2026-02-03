@@ -26,7 +26,9 @@ export const hoverState = {
     isHovering: false,
     activationTimer: null,
     deactivationTimer: null,
-    autoActivated: false
+    autoActivated: false,
+    // ✨ 追踪活跃的手指触摸数量
+    activeTouches: 0
 };
 
 // 长按切换工具状态

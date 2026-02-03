@@ -100,6 +100,12 @@ function handleBarrelButtonRelease() {
 function startHoverActivation() {
     cancelHoverActivation();
     hoverState.activationTimer = setTimeout(() => {
+        // ✨ 关键检查：如果有活跃的手指触摸，拒绝 hover 激活
+        if (hoverState.activeTouches > 0) {
+            addDebugLog(`⛔ Hover 激活被拒绝：有 ${hoverState.activeTouches} 个活跃手指触摸`);
+            return;
+        }
+
         if (hoverState.isHovering && !state.drawingActive) {
             window.toggleDrawing();
             hoverState.autoActivated = true;
@@ -108,7 +114,7 @@ function startHoverActivation() {
             pendingStroke.confirmed = false;
             pendingStroke.confirmCount = 0;
             state.isDrawing = false;
-            // ✨ 清理 Canvas 路径状态，防止手掌触控时产生意外连线
+            // 清理 Canvas 路径状态
             if (state.ctx) {
                 state.ctx.beginPath();
             }
@@ -193,11 +199,13 @@ export function initTouchHandlers() {
 
             addDebugLog(`触摸开始：待确认 (count=1)`);
         } else {
-            // 🖐️ 手指触摸：清理状态并断开 Canvas 路径
+            // 🖐️ 手指触摸：追踪活跃触摸并清理状态
+            hoverState.activeTouches++;
+            addDebugLog(`🖐️ 手指触摸开始 (activeTouches=${hoverState.activeTouches})`);
             pendingStroke.active = false;
             pendingStroke.confirmed = false;
             pendingStroke.confirmCount = 0;
-            // ✨ 重要：beginPath() 断开任何未完成的路径，防止误触连线
+            // 断开任何未完成的路径
             if (state.ctx) {
                 state.ctx.beginPath();
             }
@@ -294,6 +302,13 @@ export function initTouchHandlers() {
     };
 
     handlers.touchend = (e) => {
+        // ✨ 减少活跃手指触摸计数（对于非 stylus 触摸）
+        const touch = e.changedTouches?.[0];
+        if (touch && !isStylus(touch) && hoverState.activeTouches > 0) {
+            hoverState.activeTouches--;
+            addDebugLog(`🖐️ 手指触摸结束 (activeTouches=${hoverState.activeTouches})`);
+        }
+
         if (pendingStroke.active) {
             pendingStroke.active = false;
             pendingStroke.confirmed = false;
@@ -301,7 +316,6 @@ export function initTouchHandlers() {
         }
 
         if (state.isDrawing) {
-            const touch = e.changedTouches?.[0];
             if (touch && isStylus(touch)) {
                 e.preventDefault();
             }
