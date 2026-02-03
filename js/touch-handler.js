@@ -150,13 +150,13 @@ function cancelHoverDeactivation() {
 
 // 初始化触控事件处理
 export function initTouchHandlers() {
-    const canvas = state.canvas;
+    // ✨ 不再在此处捕获 canvas，而是在事件处理函数中动态获取 state.canvas
 
     // 鼠标事件
     handlers.mousedown = (e) => {
         if (!state.drawingActive) return;
         const contentWrapper = document.getElementById('content-wrapper');
-        if (!contentWrapper.contains(e.target) && e.target !== canvas) return;
+        if (!contentWrapper.contains(e.target) && e.target !== state.canvas) return;
         startDrawing(e);
     };
     handlers.mousemove = draw;
@@ -184,7 +184,7 @@ export function initTouchHandlers() {
             e.stopPropagation();
 
             const scrollTop = contentWrapper?.scrollTop || 0;
-            const canvasRect = canvas.getBoundingClientRect();
+            const canvasRect = state.canvas.getBoundingClientRect();
             const screenX = touch.clientX - canvasRect.left;
             const screenY = touch.clientY - canvasRect.top;
 
@@ -284,7 +284,7 @@ export function initTouchHandlers() {
 
         const contentWrapper = document.getElementById('content-wrapper');
         const scrollTop = contentWrapper?.scrollTop || 0;
-        const canvasRect = canvas.getBoundingClientRect();
+        const canvasRect = state.canvas.getBoundingClientRect();
         const screenX = touch.clientX - canvasRect.left;
         const screenY = touch.clientY - canvasRect.top;
         const contentX = screenX;
