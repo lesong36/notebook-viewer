@@ -801,7 +801,7 @@
         padding: 12px 16px;
         border-radius: 8px;
         z-index: 99999;
-        max-width: 280px;
+        max-width: 320px;
         display: none;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     ">
@@ -811,10 +811,16 @@
         <div id="debug-force">force: -</div>
         <div id="debug-is-stylus" style="font-weight: bold; margin-top: 4px;">isStylus: -</div>
         <div id="debug-drawing-active" style="color: #ff0;">drawingActive: -</div>
-        <div id="debug-log" style="margin-top: 8px; max-height: 60px; overflow-y: auto; font-size: 10px; color: #aaa;">
+        <div id="debug-pending" style="color: #0ff;">pending: -</div>
+        <div id="debug-log" style="margin-top: 8px; max-height: 100px; overflow-y: auto; font-size: 10px; color: #aaa;">
         </div>
-        <button onclick="document.getElementById('ipad-debug-panel').style.display='none'"
-            style="margin-top: 8px; font-size: 10px; padding: 4px 8px; cursor: pointer;">关闭面板</button>
+        <div style="margin-top: 8px; display: flex; gap: 6px;">
+            <button id="debug-copy-btn"
+                style="font-size: 10px; padding: 4px 8px; cursor: pointer; background: #22c55e; color: white; border: none; border-radius: 4px;">📋
+                复制日志</button>
+            <button onclick="document.getElementById('ipad-debug-panel').style.display='none'"
+                style="font-size: 10px; padding: 4px 8px; cursor: pointer; border-radius: 4px;">关闭面板</button>
+        </div>
     </div>
 
     <script type="module">
@@ -859,6 +865,18 @@
             toolBeforePress: 'pen'       // 长按前的工具类型
         };
 
+        // ✨ 延迟确认机制 - 防止手指触控初始毫秒泄漏
+        const pendingStroke = {
+            active: false,               // 是否有待确认的笔触
+            startX: 0,                   // 起始屏幕 X
+            startY: 0,                   // 起始屏幕 Y
+            contentX: 0,                 // 起始内容 X
+            contentY: 0,                 // 起始内容 Y
+            confirmed: false,            // 是否已确认为 Apple Pencil
+            confirmCount: 0,             // 连续确认次数 (需要 >= 2 才确认)
+            scrollTop: 0                 // 起始滚动位置
+        };
+
         // ✨ 事件处理函数引用（用于正确添加/移除事件监听器）
         const handlers = {
             mousedown: null,
@@ -873,41 +891,31 @@
             pointerleave: null
         };
 
-        // ✨ 判断是否为 Apple Pencil（触控笔）- 完全复制原版 GlobalDrawingCanvas.js
+        // ✨ 判断是否为 Apple Pencil（触控笔）- 严格模式，只信任 touchType 属性
         function isStylus(touch) {
             // 更新调试面板
             updateDebugPanel(touch);
 
-            // 标准方式：检查 touchType 属性
-            // touchType: 'stylus' - Apple Pencil
-            // touchType: 'direct' - 手指直接触摸
-            if (touch.touchType !== undefined) {
-                const result = touch.touchType === 'stylus';
-                updateDebugResult(result, `touchType=${touch.touchType}`);
-                return result;
+            // ✨ 严格模式：只信任 touchType 属性
+            // touchType: 'stylus' - Apple Pencil (确认返回 true)
+            // touchType: 'direct' - 手指直接触摸 (确认返回 false)
+            // touchType: undefined - 无法确定 (严格模式返回 false)
+            if (touch.touchType === 'stylus') {
+                updateDebugResult(true, `touchType=stylus ✅`);
+                return true;
             }
 
-            // 降级方案：检查触摸半径（radiusX/radiusY）
-            // Apple Pencil 的触摸半径通常很小（<8）
-            // 手指的触摸半径较大（>10）
-            // 手掌的触摸半径非常大（>20）
-            if (touch.radiusX !== undefined && touch.radiusY !== undefined) {
-                const avgRadius = (touch.radiusX + touch.radiusY) / 2;
-                // 如果平均半径小于8，很可能是 Apple Pencil
-                if (avgRadius < 8) {
-                    updateDebugResult(true, `avgRadius=${avgRadius.toFixed(1)}<8`);
-                    return true;
-                }
-                // 如果半径很大（>15），肯定不是 Apple Pencil
-                if (avgRadius > 15) {
-                    updateDebugResult(false, `avgRadius=${avgRadius.toFixed(1)}>15`);
-                    return false;
-                }
+            if (touch.touchType === 'direct') {
+                updateDebugResult(false, `touchType=direct 🖐️`);
+                return false;
             }
 
-            // 无法确定：严格模式 - 拒绝绘制
-            // 只有确认是 Apple Pencil 才允许绘制，其他情况一律拒绝
-            updateDebugResult(false, 'fallback=false (strict)');
+            // ✨ 严格模式：如果没有 touchType 属性，拒绝绘制
+            // 不再使用不可靠的 radius 降级方案
+            const avgRadius = (touch.radiusX !== undefined && touch.radiusY !== undefined)
+                ? ((touch.radiusX + touch.radiusY) / 2).toFixed(1)
+                : 'N/A';
+            updateDebugResult(false, `touchType=undefined, radius=${avgRadius} ❌`);
             return false;
         }
 
@@ -923,7 +931,9 @@
             document.getElementById('debug-force').textContent =
                 `force: ${touch.force !== undefined ? touch.force.toFixed(2) : 'undefined'}`;
             document.getElementById('debug-drawing-active').textContent =
-                `drawingActive: ${drawingActive}`;
+                `drawingActive: ${drawingActive}, isDrawing: ${isDrawing}`;
+            document.getElementById('debug-pending').textContent =
+                `pending: active=${pendingStroke.active}, confirmed=${pendingStroke.confirmed}, count=${pendingStroke.confirmCount}`;
         }
 
         function updateDebugResult(result, reason) {
@@ -940,12 +950,55 @@
             if (log) {
                 const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 log.innerHTML = `<div>${time} ${msg}</div>` + log.innerHTML;
-                // 只保留最近 10 条
-                while (log.children.length > 10) {
+                // 只保留最近 20 条
+                while (log.children.length > 20) {
                     log.removeChild(log.lastChild);
                 }
             }
         }
+
+        // ✨ 复制调试日志到剪贴板
+        function copyDebugLog() {
+            const panel = document.getElementById('ipad-debug-panel');
+            if (!panel) return;
+
+            const touchType = document.getElementById('debug-touch-type')?.textContent || '';
+            const radius = document.getElementById('debug-radius')?.textContent || '';
+            const force = document.getElementById('debug-force')?.textContent || '';
+            const isStylus = document.getElementById('debug-is-stylus')?.textContent || '';
+            const drawingActive = document.getElementById('debug-drawing-active')?.textContent || '';
+            const pending = document.getElementById('debug-pending')?.textContent || '';
+            const logEl = document.getElementById('debug-log');
+            const logLines = logEl ? Array.from(logEl.children).map(div => div.textContent).join('\n') : '';
+
+            const fullLog = `=== iPad 调试日志 ===
+时间: ${new Date().toISOString()}
+${touchType}
+${radius}
+${force}
+${isStylus}
+${drawingActive}
+${pending}
+
+=== 事件日志 ===
+${logLines}`;
+
+            navigator.clipboard.writeText(fullLog).then(() => {
+                showToast('📋 日志已复制', 'success');
+            }).catch(err => {
+                // 降级：选中文本
+                console.error('复制失败:', err);
+                showToast('❌ 复制失败', 'error');
+            });
+        }
+
+        // 绑定复制按钮事件
+        setTimeout(() => {
+            const copyBtn = document.getElementById('debug-copy-btn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', copyDebugLog);
+            }
+        }, 100);
 
         // ✨ 三击显示调试面板
         let tapCount = 0;
@@ -1479,15 +1532,15 @@ _display_outputs = []
         }
 
         // ✨ Pointer Down - 检测 Apple Pencil Pro 按钮按下
-        // 注意：Safari 把 Apple Pencil 报告为 pointerType='touch' 而不是 'pen'
+        // 注意：只处理 pointerType='pen'，拒绝 touch 以防止手掌误触发
         handlers.pointerdown = (e) => {
             // 记录所有 pointerdown 事件的详细信息
             const tangential = e.tangentialPressure !== undefined ? e.tangentialPressure.toFixed(2) : 'N/A';
             const twist = e.twist !== undefined ? e.twist : 'N/A';
             addDebugLog(`ptrdn: t=${e.pointerType} btn=${e.button} btns=${e.buttons} tang=${tangential} twist=${twist}`);
 
-            // 接受 'pen' 或 'touch' 类型（Safari 把 Apple Pencil 报告为 touch）
-            if (e.pointerType !== 'pen' && e.pointerType !== 'touch') return;
+            // ✨ 修复：只接受 'pen' 类型，拒绝 'touch' 以防止手掌误触发悬浮相关逻辑
+            if (e.pointerType !== 'pen') return;
 
             if (!drawingActive) return;
 
@@ -1556,7 +1609,7 @@ _display_outputs = []
         // 鼠标抬起
         handlers.mouseup = stopDrawing;
 
-        // ✨ 触摸事件（支持 Apple Pencil）- 完全复制原版
+        // ✨ 触摸事件（支持 Apple Pencil）- 使用延迟确认机制防止手指泄漏
         handlers.touchstart = (e) => {
             if (!drawingActive) return; // ✨ 关键：只有在涂鸦激活时才处理
 
@@ -1565,10 +1618,10 @@ _display_outputs = []
 
             const touch = e.touches[0];
 
-            // ✨ 关键：检测 Apple Pencil
+            // ✨ 第一次检测 Apple Pencil
             const isApplePencil = isStylus(touch);
 
-            // 如果是 Apple Pencil，检查是否在内容区域
+            // 如果初步判断是 Apple Pencil，进入待确认状态（不立即开始绘制）
             if (isApplePencil) {
                 // ✨ 启动长按检测（1秒切换工具）
                 startLongPressDetection(touch.clientX, touch.clientY);
@@ -1580,48 +1633,108 @@ _display_outputs = []
                     return; // 触摸在内容区域外，忽略
                 }
 
-                // ✅ Apple Pencil：阻止滚动和默认行为
+                // ✅ 阻止滚动和默认行为
                 e.preventDefault();
                 e.stopPropagation();
 
-                isDrawing = true;
+                // ✨ 延迟确认：不立即设置 isDrawing=true，而是进入待确认状态
                 const scrollTop = contentWrapper?.scrollTop || 0;
                 const canvasRect = canvas.getBoundingClientRect();
                 const screenX = touch.clientX - canvasRect.left;
                 const screenY = touch.clientY - canvasRect.top;
-                lastX = screenX;
-                lastY = screenY + scrollTop;
-                currentStroke = { tool: currentTool, color: currentColor, width: currentLineWidth, points: [{ x: lastX, y: lastY }] };
 
-                // 应用笔刷设置
-                ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor;
-                ctx.lineWidth = currentTool === 'eraser' ? currentLineWidth * 3 : currentLineWidth;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
-                ctx.beginPath();
-                ctx.moveTo(screenX, screenY);
+                // 记录待确认状态
+                pendingStroke.active = true;
+                pendingStroke.startX = screenX;
+                pendingStroke.startY = screenY;
+                pendingStroke.contentX = screenX;
+                pendingStroke.contentY = screenY + scrollTop;
+                pendingStroke.confirmed = false;
+                pendingStroke.confirmCount = 1;  // touchstart 算第一次确认
+                pendingStroke.scrollTop = scrollTop;
+
+                addDebugLog(`触摸开始：待确认 (count=1)`);
             } else {
                 // 🖐️ 手指触摸：不处理绘制，允许滚动
-                // 不调用 preventDefault()，让系统处理滚动
+                // 明确清除任何待确认状态
+                pendingStroke.active = false;
+                pendingStroke.confirmed = false;
+                pendingStroke.confirmCount = 0;
                 return;
             }
         };
 
         handlers.touchmove = (e) => {
-            if (!drawingActive || !isDrawing) return;
+            if (!drawingActive) return;
 
             // ⚠️ 手掌防误触：检查触摸数量和类型
             if (e.touches.length !== 1) {
-                // 多点触摸（可能是手掌）：停止绘制
+                // 多点触摸（可能是手掌）：停止绘制并清除待确认
+                pendingStroke.active = false;
+                pendingStroke.confirmed = false;
+                pendingStroke.confirmCount = 0;
                 stopDrawing();
+                return;
+            }
+
+            // ✨ 安全检查：如果既没有活跃的待确认状态，也没有正在绘制，立即返回
+            if (!pendingStroke.active && !isDrawing) {
                 return;
             }
 
             const touch = e.touches[0];
 
+            // ✨ 再次检测 Apple Pencil（二次验证）
+            const isApplePencil = isStylus(touch);
+
+            // ✨ 处理待确认状态
+            if (pendingStroke.active && !pendingStroke.confirmed) {
+                if (!isApplePencil) {
+                    // 二次验证失败：确认不是笔，清除待确认状态
+                    pendingStroke.active = false;
+                    pendingStroke.confirmed = false;
+                    pendingStroke.confirmCount = 0;
+                    addDebugLog(`二次验证失败：非 Apple Pencil`);
+                    return; // 不执行绘制，允许滚动
+                }
+
+                // 连续确认次数 +1
+                pendingStroke.confirmCount++;
+                addDebugLog(`二次验证通过 (count=${pendingStroke.confirmCount})`);
+
+                // ✨ 需要连续 3 次确认才真正开始绘制（增加到 3 次以提高可靠性）
+                if (pendingStroke.confirmCount >= 3) {
+                    pendingStroke.confirmed = true;
+
+                    // ✅ 现在才真正开始绘制
+                    isDrawing = true;
+                    lastX = pendingStroke.contentX;
+                    lastY = pendingStroke.contentY;
+                    currentStroke = {
+                        tool: currentTool,
+                        color: currentColor,
+                        width: currentLineWidth,
+                        points: [{ x: lastX, y: lastY }]
+                    };
+
+                    // 初始化绘图上下文
+                    ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor;
+                    ctx.lineWidth = currentTool === 'eraser' ? currentLineWidth * 3 : currentLineWidth;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
+                    ctx.beginPath();
+                    ctx.moveTo(pendingStroke.startX, pendingStroke.startY);
+
+                    addDebugLog(`✅ 确认为 Apple Pencil，开始绘制`);
+                }
+            }
+
+            // 如果还未确认，继续等待
+            if (!isDrawing) return;
+
             // ✨ 只处理 Apple Pencil 的移动
-            if (!isStylus(touch)) {
+            if (!isApplePencil) {
                 // 非 Apple Pencil（可能是手掌误触）：停止绘制
                 stopDrawing();
                 return;
@@ -1656,6 +1769,13 @@ _display_outputs = []
         };
 
         handlers.touchend = (e) => {
+            // ✨ 清除待确认状态
+            if (pendingStroke.active) {
+                pendingStroke.active = false;
+                pendingStroke.confirmed = false;
+                pendingStroke.confirmCount = 0;
+            }
+
             if (isDrawing) {
                 // 检查是否是 Apple Pencil 结束
                 const touch = e.changedTouches?.[0];
@@ -1671,9 +1791,9 @@ _display_outputs = []
             }
         };
 
-        // ✨ Hover 检测
+        // ✨ Hover 检测 - 只处理 pointerType='pen'，防止手掌误触发
         handlers.pointermove = (e) => {
-            // 只处理 Apple Pencil
+            // ✨ 修复：只处理 pointerType='pen'，拒绝 'touch' 防止手掌误触发悬浮逻辑
             if (e.pointerType !== 'pen') return;
 
             // ✨ 长按移动检测：如果移动超过10px，取消长按
@@ -1751,10 +1871,18 @@ _display_outputs = []
             cancelHoverActivation();
             hoverState.activationTimer = setTimeout(() => {
                 if (hoverState.isHovering && !drawingActive) {
+                    // ✨ 安全检查：确保没有活跃的触摸点（防止手掌触摸时悬浮激活）
+                    // 注：这里无法直接检测，但我们在 touchstart/touchmove 中已有严格验证
                     toggleDrawing();
                     hoverState.autoActivated = true;
                     showToast('✨ Hover 激活涂鸦', 'success');
                     console.log('✅ Hover 300ms 达成，自动激活涂鸦模式');
+
+                    // ✨ 激活后立即清除任何待确认状态，防止手掌触控被误处理
+                    pendingStroke.active = false;
+                    pendingStroke.confirmed = false;
+                    pendingStroke.confirmCount = 0;
+                    isDrawing = false;
                 }
             }, 300);
         }
