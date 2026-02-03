@@ -1,0 +1,1365 @@
+/* ========== 管理应用全局样式 ========== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  line-height: 1.6;
+}
+
+.admin-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== 加载和错误状态 ========== */
+
+.loading, .error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 18px;
+  color: #666;
+}
+
+.error {
+  color: #dc2626;
+}
+
+/* ========== 顶部工具栏 ========== */
+
+.admin-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-save, .btn-preview {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-save {
+  background: #10b981;
+  color: white;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-save:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-preview {
+  background: white;
+  color: #667eea;
+}
+
+.btn-preview:hover {
+  background: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+/* ========== 筛选器 ========== */
+
+.filter-panel {
+  background: white;
+  padding: 16px 30px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.filter-panel label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.filter-panel select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 150px;
+}
+
+.filter-panel select:hover {
+  border-color: #9ca3af;
+}
+
+.filter-panel select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-reset-filter {
+  padding: 8px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-reset-filter:hover {
+  background: #dc2626;
+}
+
+/* ========== 主内容区 ========== */
+
+.admin-main {
+  flex: 1;
+  padding: 30px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  transition: padding-right 0.3s ease;
+}
+
+/* 当课程库显示时,为主内容区添加右侧边距,避免被遮挡 */
+.admin-main.with-library {
+  padding-right: 420px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+  font-size: 16px;
+}
+
+/* ========== 模块区域 ========== */
+
+.module-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.module-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 20px;
+  padding-left: 12px;
+  border-left: 4px solid #667eea;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.module-icon {
+  font-size: 24px;
+}
+
+.module-desc {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 400;
+  margin-left: auto;
+}
+
+/* ========== 子模块容器 ========== */
+
+.module-children {
+  margin-top: 16px;
+}
+
+.children-container {
+  margin-left: 24px;
+  padding-left: 16px;
+  border-left: 2px solid #e5e7eb;
+}
+
+/* 子模块样式 - 略微缩小和降低视觉权重 */
+.children-container .module-section {
+  padding: 16px;
+  margin-bottom: 16px;
+  background: #fafafa;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.children-container .module-title {
+  font-size: 18px;
+  border-left-width: 3px;
+}
+
+/* 嵌套子模块的递进缩进 */
+.children-container .children-container {
+  margin-left: 20px;
+  padding-left: 12px;
+  border-left: 2px dashed #d1d5db;
+}
+
+.children-container .children-container .module-section {
+  padding: 12px;
+  background: #f5f5f5;
+}
+
+.children-container .children-container .module-title {
+  font-size: 16px;
+  border-left-width: 2px;
+}
+
+/* ========== 阶段区域 ========== */
+
+.stage-section {
+  margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.stage-header {
+  padding: 12px 16px;
+  background: #f9fafb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.stage-header:hover {
+  background: #f3f4f6;
+}
+
+.stage-toggle {
+  color: #9ca3af;
+  font-size: 12px;
+  width: 16px;
+  text-align: center;
+}
+
+.stage-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
+  flex: 1;
+}
+
+.grade-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.course-count {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+/* ========== 课程列表 ========== */
+
+.course-list {
+  padding: 16px;
+  background: white;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.course-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s;
+  background: white;
+}
+
+.course-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.course-id {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #667eea;
+  font-weight: 600;
+  background: #ede9fe;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.course-grade-badge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.course-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 6px;
+}
+
+.course-desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.course-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.btn-edit, .btn-delete {
+  flex: 1;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.btn-edit {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.btn-edit:hover {
+  background: #bfdbfe;
+}
+
+.btn-delete {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-delete:hover {
+  background: #fecaca;
+}
+
+.btn-add-course {
+  grid-column: 1 / -1;
+  padding: 12px;
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-add-course:hover {
+  background: #f3f4f6;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+/* ========== 弹窗 ========== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modal-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-actions button:first-child {
+  background: #667eea;
+  color: white;
+}
+
+.modal-actions button:first-child:hover {
+  background: #5568d3;
+}
+
+.modal-actions button:last-child {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.modal-actions button:last-child:hover {
+  background: #e5e7eb;
+}
+
+/* ========== 表单样式 ========== */
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-group .hint {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 400;
+  margin-left: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-group input.readonly-field {
+  background: #fafafa;
+  color: #6b7280;
+  cursor: default;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-group input.error,
+.form-group select.error,
+.form-group textarea.error {
+  border-color: #ef4444;
+}
+
+.error-msg {
+  display: block;
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.btn-primary {
+  background: #667eea !important;
+  color: white !important;
+}
+
+.btn-primary:hover {
+  background: #5568d3 !important;
+}
+
+/* ========== 响应式设计 ========== */
+
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .filter-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .course-list {
+    grid-template-columns: 1fr;
+  }
+
+  /* 小屏幕下课程库占据全宽 */
+  .course-library-panel {
+    right: 0;
+    left: 0;
+    width: 100%;
+    top: 80px;
+  }
+
+  /* 小屏幕下不调整主内容区边距 */
+  .admin-main.with-library {
+    padding-right: 30px;
+  }
+}
+
+/* ========== 拖拽样式 ========== */
+
+/* 拖拽手柄 */
+.drag-handle {
+  cursor: grab;
+  color: #999;
+  font-size: 14px;
+  margin-right: 8px;
+  user-select: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* 拖拽中的阶段 */
+.stage-section.is-dragging {
+  opacity: 0.6;
+  background: #f0f0f0;
+  border-radius: 8px;
+}
+
+/* 拖拽中的课程卡片 */
+.course-card.is-dragging {
+  opacity: 0.8;
+  transform: rotate(3deg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  cursor: grabbing;
+}
+
+/* 拖拽目标区域高亮 */
+.course-list.is-dragging-over {
+  background: #f0f8ff;
+  border: 2px dashed #6366f1;
+  border-radius: 8px;
+}
+
+/* 拖拽中的子模块 */
+.module-section.is-dragging {
+  opacity: 0.7;
+  transform: rotate(1deg);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+  background: #f8f9fa;
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  cursor: grabbing;
+}
+
+/* 子模块容器拖拽悬停状态 */
+.submodules-container.is-dragging-over {
+  background: #f0f8ff;
+  border: 2px dashed #8b5cf6;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+/* 阶段标题样式调整 */
+.stage-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.stage-toggle {
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* ========== 课程库样式 ========== */
+
+/* 课程库操作按钮 */
+.course-library-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.btn-import-file {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+.btn-import-file:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-toggle-library {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-toggle-library:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+/* 课程库面板 */
+.course-library-panel {
+  position: fixed;
+  right: 20px;
+  top: 120px;
+  bottom: 20px;
+  width: 380px;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.library-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.library-header h3 {
+  font-size: 18px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.library-file-name {
+  font-size: 14px;
+  opacity: 0.9;
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-header .btn-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.library-header .btn-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 搜索栏 */
+.library-search {
+  padding: 12px 20px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.library-search input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.library-search input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-count {
+  font-size: 13px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+/* 提示信息 */
+.library-hint {
+  padding: 10px 20px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 13px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* 课程列表 */
+.library-course-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.library-course-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.library-course-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.library-course-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.library-course-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 课程库课程卡片 */
+.library-course-item {
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: grab;
+  transition: all 0.2s;
+}
+
+.library-course-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  transform: translateY(-2px);
+}
+
+.library-course-item.is-dragging {
+  opacity: 0.7;
+  transform: rotate(2deg);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+  cursor: grabbing;
+}
+
+.library-course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.library-course-item .course-id {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 14px;
+}
+
+.library-course-item .grade-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.library-course-item .grade-badge-prep {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.library-course-item .grade-badge-general {
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.library-course-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.library-course-desc {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 空状态 */
+.library-course-list .empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* ========== 层级管理按钮样式 ========== */
+
+/* 新建模块按钮 */
+.btn-new-module {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.btn-new-module:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-new-module:active {
+  transform: translateY(0);
+}
+
+/* 模块头部布局 */
+.module-header-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.module-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 小尺寸按钮 */
+.btn-sm {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-add-submodule {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+}
+
+.btn-add-submodule:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+}
+
+.btn-add-stage {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.btn-add-stage:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-edit-module {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+.btn-edit-module:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btn-delete-module {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.btn-delete-module:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* 超小尺寸按钮 (用于阶段) */
+.btn-xs {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e5e7eb;
+}
+
+.btn-xs:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn-edit-stage {
+  color: #f59e0b;
+}
+
+.btn-delete-stage {
+  color: #ef4444;
+}
+
+/* 阶段操作按钮容器 */
+.stage-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+/* 模块/阶段编辑器模态框 */
+.module-editor-modal,
+.stage-editor-modal {
+  max-width: 600px;
+}
+
+.form-info {
+  background: #f3f4f6;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.form-info strong {
+  color: #374151;
+}
+
+/* ========== Stage分组样式 ========== */
+.stage-group {
+  margin-bottom: 24px;
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.stage-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stage-course-count {
+  font-size: 14px;
+  font-weight: normal;
+  color: #6b7280;
+  margin-left: auto;
+}
+
+.stage-group .course-list {
+  background: white;
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 60px;
+}
+
+.stage-group .course-list.is-dragging-over {
+  background: #eff6ff;
+  border: 2px dashed #3b82f6;
+}
+
+
+/* ==================== 课程库统计信息 ==================== */
+
+.library-stats {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-bottom: 1px solid #d1d5db;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.stat-available .stat-value {
+  color: #10b981;
+}
+
+.stat-configured .stat-value {
+  color: #3b82f6;
+}
+
+.stat-total .stat-value {
+  color: #6b7280;
+}
+
+/* ==================== 课程库控制区 ==================== */
+
+.library-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.toggle-configured-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.toggle-configured-label:hover {
+  color: #1f2937;
+}
+
+.toggle-configured-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.library-hint {
+  font-size: 13px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ==================== 已配置课程样式 ==================== */
+
+.library-course-item.is-configured {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  opacity: 0.9;
+}
+
+.library-course-item.is-configured:hover {
+  opacity: 1;
+}
+
+.configured-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  margin-left: auto;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+
+/* ==================== 课程路径显示 ==================== */
+
+.course-config-paths {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #bfdbfe;
+}
+
+.config-path-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 8px;
+  background: white;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.config-path-item:last-child {
+  margin-bottom: 0;
+}
+
+.path-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.path-text {
+  flex: 1;
+  line-height: 1.4;
+  word-break: break-word;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+/* 路径分隔符样式 */
+.path-text::before {
+  content: "";
+  display: inline;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .library-stats {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .stat-item {
+    padding: 8px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .library-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* ==================== 动画效果 ==================== */
+
+.library-course-item.is-configured {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+}
+
+/* 搜索计数器更新 */
+.search-count {
+  transition: all 0.3s ease;
+}
+
+.search-count:hover {
+  color: #1f2937;
+}

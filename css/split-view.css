@@ -1,0 +1,2200 @@
+/**
+ * 分屏视图样式
+ * 包含SplitViewLesson、NotebookViewer、HtmlViewer、ResizableSplitter的所有样式
+ */
+
+/* ==================== 主容器 ==================== */
+.split-view-container {
+  display: flex;
+  flex-direction: column; /* 垂直布局: toolbar在上,内容区在下 */
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* 内容区容器(包含左右面板和分割条) */
+.split-view-content {
+  display: flex;
+  flex-direction: row; /* 水平布局: 左侧、分割条、右侧 */
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 工具栏 */
+.split-view-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  gap: 1rem;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-2px);
+}
+
+.toolbar-button {
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toolbar-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ==================== 分屏面板 ==================== */
+.split-pane {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* 移除transition以消除拖动延迟感，让分屏响应更即时 */
+  position: relative;
+  flex-shrink: 0; /* 防止收缩 */
+}
+
+.left-pane {
+  background-color: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+}
+
+.right-pane {
+  background-color: white;
+}
+
+/* 自定义滚动条 */
+.split-pane::-webkit-scrollbar {
+  width: 8px;
+}
+
+.split-pane::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.split-pane::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.split-pane::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* ==================== 分割条 ==================== */
+.resizable-splitter {
+  width: 8px;
+  background: #d1d5db;
+  cursor: col-resize;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s;
+  z-index: 50;
+}
+
+.resizable-splitter:hover {
+  background: #9ca3af;
+}
+
+.resizable-splitter.dragging {
+  background: #6366f1;
+}
+
+/* 拖拽手柄 */
+.splitter-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 40px;
+  background: white;
+  border-radius: 2px;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.resizable-splitter:hover .splitter-handle {
+  height: 60px;
+  opacity: 1;
+}
+
+/* ==================== NotebookViewer样式 ==================== */
+.notebook-container {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.notebook-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.notebook-toc-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.9);
+  color: #334155;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  backdrop-filter: blur(8px);
+}
+
+.notebook-toc-button:hover {
+  border-color: #c7d2fe;
+  background: rgba(238, 242, 255, 0.95);
+  color: #3730a3;
+  transform: translateY(-1px);
+}
+
+.notebook-toc-button:active {
+  transform: translateY(0);
+}
+
+.notebook-toc-button svg {
+  opacity: 0.1;
+}
+
+.notebook-toc-button:hover svg {
+  opacity: 0.35;
+}
+
+/* 笔记面板左侧预留工具条空间，避免遮挡正文 */
+.split-pane.has-notebook-dock .notebook-container {
+  padding-left: calc(2rem + 60px);
+}
+
+/* 固定在“笔记面板最左侧”的纵向工具条（JS动态计算 left/top） */
+.notebook-dock-actions {
+  position: fixed;
+  z-index: 1200; /* 高于画布(1000) */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+
+.notebook-dock-actions .notebook-toc-button {
+  pointer-events: auto;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 14px;
+}
+
+.notebook-icon {
+  font-size: 2.5rem;
+}
+
+.notebook-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  flex: 1;
+}
+
+.notebook-meta {
+  font-size: 0.875rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+}
+
+/* ==================== Notebook 目录悬浮层 ==================== */
+.notebook-toc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(10px);
+  z-index: 10002;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 5rem 1rem 1rem;
+}
+
+.notebook-toc-panel {
+  width: min(560px, 92vw);
+  max-height: min(70vh, 640px);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.notebook-toc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.notebook-toc-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.notebook-toc-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #334155;
+}
+
+.notebook-toc-close:hover {
+  background: rgba(241, 245, 249, 0.95);
+}
+
+.notebook-toc-list {
+  padding: 0.5rem 0.25rem 0.75rem;
+  overflow: auto;
+  max-height: calc(min(70vh, 640px) - 56px);
+}
+
+.notebook-toc-item {
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  margin: 0.15rem 0.5rem;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #0f172a;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notebook-toc-item:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.18);
+}
+
+.notebook-toc-target-flash {
+  outline: 3px solid rgba(99, 102, 241, 0.45);
+  outline-offset: 6px;
+  border-radius: 8px;
+}
+
+/* Notebook单元格 */
+.notebook-cell {
+  margin-bottom: 1.5rem;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Markdown内容样式 */
+.markdown-content {
+  line-height: 1.8;
+  color: #334155;
+}
+
+/* 图片样式和错误处理 */
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 图片加载失败时的占位符 */
+.markdown-content img[src]:not([src=""]) {
+  position: relative;
+  min-height: 100px;
+  background: #f1f5f9;
+  display: block;
+}
+
+.markdown-content img:not([src]):before,
+.markdown-content img[src=""]:before {
+  content: "🖼️ 图片加载失败";
+  display: block;
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.markdown-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #0f172a;
+  border-bottom: 3px solid #6366f1;
+  padding-bottom: 0.5rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #1e293b;
+}
+
+.markdown-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: #334155;
+}
+
+.markdown-content p {
+  margin-bottom: 1rem;
+}
+
+.markdown-content ul, .markdown-content ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content code {
+  background: #f1f5f9;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: #e11d48;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #6366f1;
+  padding-left: 1rem;
+  margin-left: 0;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* 表格样式 */
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.markdown-content table thead {
+  background: #f1f5f9;
+}
+
+.markdown-content table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.markdown-content table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.markdown-content table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.markdown-content table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 分割线样式 */
+.markdown-content hr {
+  margin: 2rem 0;
+  border: none;
+  border-top: 2px solid #e2e8f0;
+  height: 0;
+}
+
+/* Mermaid 图表样式 */
+.mermaid-diagram {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 代码块样式 */
+.code-wrapper {
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.code-header {
+  background: #1e293b;
+  color: #94a3b8;
+  padding: 0.5rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.code-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.run-code-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.375rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: background 0.2s;
+}
+
+.run-code-btn:hover {
+  background: #2563eb;
+}
+
+.run-code-btn:disabled {
+  background: #64748b;
+  cursor: not-allowed;
+}
+
+.run-code-btn svg {
+  flex-shrink: 0;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.code-block {
+  background: #0f172a !important;
+  color: #22c55e;
+  padding: 1.5rem;
+  margin: 0;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.code-block::-webkit-scrollbar {
+  height: 6px;
+}
+
+.code-block::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.code-block::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+/* Python执行结果样式 */
+.code-output {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.output-success {
+  background: #f0fdf4;
+  border-top-color: #bbf7d0;
+}
+
+.output-error {
+  background: #fef2f2;
+  border-top-color: #fecaca;
+}
+
+.output-loading {
+  padding: 1rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.output-text {
+  padding: 1rem;
+}
+
+.output-text pre {
+  margin: 0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #1e293b;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.output-plot {
+  padding: 1rem;
+  text-align: center;
+  background: white;
+}
+
+.output-plot img {
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.output-error {
+  padding: 1rem;
+}
+
+.error-title {
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.output-error pre {
+  margin: 0;
+  color: #991b1b;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* ==================== HtmlViewer样式 ==================== */
+.html-viewer-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.html-content-iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+}
+
+/* iframe 画笔遮罩层 */
+/* 当画笔激活时，遮罩变为可交互，捕获事件传递给画布 */
+/* 但滚轮事件需要透传，所以使用特殊处理 */
+.iframe-drawing-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;  /* 默认透明，不阻止 iframe 交互 */
+  z-index: 10;  /* 在 iframe 之上 */
+  background: transparent;
+}
+
+/* 画笔激活时，遮罩捕获事件 */
+.iframe-drawing-mask.drawing-active {
+  pointer-events: auto;
+  cursor: crosshair;
+  /* 注意：滚轮事件通过 JavaScript 透传 */
+}
+
+/* ==================== 全局画笔样式 ==================== */
+/* 全局画布 - 使用 absolute 定位在contentWrapper内部 */
+/* ⚠️ 关键架构：Canvas随容器滚动，涂鸦自然跟随内容 */
+/* 画布始终 pointer-events: none，绘图通过 document 事件监听实现 */
+.global-drawing-canvas {
+  position: absolute;
+  /* top, left, width, height 由 JavaScript 动态设置 */
+  pointer-events: none;  /* 始终透明，不拦截事件 */
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  /* ✨ iPad优化：禁用所有浏览器手势，让 JS 完全控制触摸 */
+  touch-action: none;
+}
+
+.global-drawing-canvas.drawing-active {
+  opacity: 1;
+  /* 保持 pointer-events: none，事件由document监听处理 */
+  /* touch-action: none 继承自父类 */
+}
+
+/* 旧版画布样式（兼容）*/
+.drawing-canvas-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.drawing-canvas-overlay.drawing-active {
+  pointer-events: auto;
+  opacity: 1;
+  cursor: crosshair;
+}
+
+/* ✨ Apple Pencil Pro 按钮功能：工具切换提示 Toast */
+.drawing-tool-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.drawing-tool-toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.toast-color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+/* iPad Pro 适配：稍大的字体和触摸区域 */
+@media (min-width: 768px) {
+  .drawing-tool-toast {
+    font-size: 1.25rem;
+    padding: 1.25rem 2rem;
+  }
+
+  .toast-color-dot {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* ✨ iPad 调试面板样式 */
+.debug-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 360px;
+  max-height: 500px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.debug-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.debug-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.debug-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.debug-panel-status {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.debug-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.debug-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.debug-value {
+  color: #1f2937;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.debug-value.button-pressed {
+  color: #ef4444;
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.debug-color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  flex-shrink: 0;
+}
+
+.debug-panel-logs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.debug-logs-header {
+  padding: 10px 16px;
+  background: #f9fafb;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.debug-logs-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  background: #fafafa;
+}
+
+.debug-log-item {
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  font-size: 12px;
+  display: flex;
+  gap: 8px;
+  background: white;
+  border-left: 3px solid #d1d5db;
+}
+
+.debug-log-info {
+  border-left-color: #3b82f6;
+}
+
+.debug-log-success {
+  border-left-color: #22c55e;
+}
+
+.debug-log-warning {
+  border-left-color: #f59e0b;
+}
+
+.debug-log-error {
+  border-left-color: #ef4444;
+}
+
+.debug-log-time {
+  color: #9ca3af;
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.debug-log-msg {
+  color: #374151;
+  flex: 1;
+}
+
+/* 滚动条样式 */
+.debug-logs-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.debug-logs-content::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.debug-logs-content::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.debug-logs-content::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* iPad 竖屏适配 */
+@media (max-width: 768px) and (orientation: portrait) {
+  .debug-panel {
+    width: calc(100vw - 40px);
+    max-height: 400px;
+    bottom: 10px;
+    right: 20px;
+  }
+}
+
+/* iPad 横屏适配 */
+@media (min-width: 768px) and (orientation: landscape) {
+  .debug-panel {
+    width: 400px;
+    max-height: 600px;
+  }
+}
+
+/* 画笔工具栏按钮 */
+.drawing-toolbar-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drawing-toolbar-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.drawing-toolbar-button.active {
+  background: rgba(239, 68, 68, 0.8);
+  border-color: white;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.drawing-toolbar-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 清除按钮 */
+.clear-drawing-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-drawing-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+.clear-drawing-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 画笔工具组 */
+.drawing-tools-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 扩展工具容器 */
+.drawing-extended-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 0.5rem;
+  animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 画笔/橡皮擦切换组 */
+.tool-toggle-group {
+  display: flex;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tool-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.6rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tool-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.tool-button.active {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+.tool-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 颜色选择器组 */
+.color-picker-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+.color-button {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.color-button:hover {
+  transform: scale(1.15);
+}
+
+.color-button.active {
+  border-color: white;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.custom-color-input {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+}
+
+.custom-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.custom-color-input::-webkit-color-swatch {
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+/* 线宽选择器组 */
+.line-width-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+.line-width-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.line-width-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.line-width-button.active {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.line-width-indicator {
+  display: block;
+  background: white;
+  border-radius: 50%;
+}
+
+/* 清除按钮 - 在扩展工具中的样式 */
+.drawing-extended-tools .clear-drawing-button {
+  padding: 0.4rem 0.6rem;
+}
+
+.drawing-extended-tools .clear-drawing-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 导出PDF按钮 */
+.export-pdf-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.6rem;
+  background: rgba(34, 197, 94, 0.3);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.export-pdf-button:hover {
+  background: rgba(34, 197, 94, 0.5);
+}
+
+.export-pdf-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* PDF导出加载遮罩 */
+.pdf-export-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.pdf-export-loading .loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.pdf-export-loading .loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+}
+
+/* ==================== 加载状态 ==================== */
+.notebook-loading,
+.html-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #64748b;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.notebook-loading p,
+.html-loading p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ==================== 错误状态 ==================== */
+.notebook-error,
+.html-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.notebook-error h3,
+.html-error h3 {
+  font-size: 1.5rem;
+  color: #dc2626;
+  margin: 0 0 0.5rem 0;
+}
+
+.notebook-error p,
+.html-error p {
+  color: #64748b;
+  margin: 0.5rem 0;
+}
+
+.error-hint {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border-radius: 8px;
+  border-left: 4px solid #dc2626;
+  text-align: left;
+  max-width: 500px;
+}
+
+.error-hint ul {
+  margin: 0.5rem 0 0 1.5rem;
+  color: #991b1b;
+}
+
+.retry-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.retry-button:hover {
+  background: #4f46e5;
+}
+
+/* ==================== 响应式设计 ==================== */
+@media (max-width: 768px) {
+  .split-view-container {
+    flex-direction: column;
+  }
+
+  .split-pane {
+    width: 100% !important;
+    height: 50% !important;
+  }
+
+  .resizable-splitter {
+    width: 100%;
+    height: 8px;
+    cursor: row-resize;
+  }
+
+  .splitter-handle {
+    width: 40px;
+    height: 4px;
+  }
+
+  .notebook-container {
+    padding: 1rem;
+  }
+
+  .notebook-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* ==================== 全屏模式 ==================== */
+.split-view-container:fullscreen {
+  background: white;
+}
+
+.split-view-container:fullscreen .split-view-toolbar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* ==================== 视图切换按钮组 ==================== */
+.view-toggle-group {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+  margin-right: 1rem;
+  align-items: center;
+}
+
+/* 下拉选择器容器 */
+.view-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 下拉选择器标签 */
+.view-select-label {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 下拉选择器 */
+.view-select {
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  min-width: 140px;
+}
+
+.view-select:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.view-select:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.3);
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+/* 下拉选项样式 */
+.view-select option {
+  background: #667eea;
+  color: white;
+  padding: 0.5rem;
+}
+
+/* 旧按钮样式（保留以兼容其他可能的使用） */
+.view-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.view-toggle-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.view-toggle-button.active {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.view-toggle-button:not(.active):hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ==================== 题库容器 ==================== */
+.question-bank-container {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.question-bank-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-icon {
+  font-size: 2.5rem;
+}
+
+.header-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  flex: 1;
+}
+
+.header-meta {
+  font-size: 0.875rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.highlight-count {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+/* ==================== 题目列表 ==================== */
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.question-item {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #6366f1;
+  transition: all 0.2s ease;
+}
+
+.question-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* 高亮题目样式 */
+.question-item.highlighted {
+  background: linear-gradient(to right, #fffbeb 0%, white 100%);
+  border-left-color: #f59e0b;
+  border-left-width: 6px;
+}
+
+.question-item.highlighted:hover {
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.question-number {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+.question-type-tag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #f1f5f9;
+  color: #6366f1;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.question-content {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #334155;
+  margin-bottom: 1rem;
+}
+
+.question-image-wrapper {
+  margin-top: 1rem;
+}
+
+.question-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e0;
+  border-radius: 8px;
+  color: #64748b;
+  text-align: center;
+}
+
+.image-error .error-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.image-error .error-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.image-error .error-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* ==================== 状态样式 ==================== */
+.question-loading,
+.question-empty,
+.question-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.question-loading .loading-spinner,
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.question-loading p,
+.question-empty p,
+.question-error p {
+  font-size: 1rem;
+  margin: 0.5rem 0;
+}
+
+.question-empty .empty-icon,
+.question-error .error-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.question-empty h3,
+.question-error h3 {
+  font-size: 1.5rem;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.question-error h3 {
+  color: #dc2626;
+}
+
+.empty-hint,
+.error-hint {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 4px solid #6366f1;
+  text-align: left;
+  max-width: 500px;
+  font-size: 0.875rem;
+}
+
+.error-hint {
+  background: #fef2f2;
+  border-left-color: #dc2626;
+}
+
+.error-hint ul {
+  margin: 0.5rem 0 0 1.5rem;
+  color: #991b1b;
+  text-align: left;
+}
+
+.retry-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.retry-button:hover {
+  background: #4f46e5;
+}
+
+/* ==================== 题库工具栏 ==================== */
+.question-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.filter-button,
+.clear-highlights-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-button:hover,
+.clear-highlights-button:hover {
+  background: #f8fafc;
+  border-color: #cbd5e0;
+  color: #475569;
+}
+
+.filter-button.active {
+  background: #fef3c7;
+  border-color: #fbbf24;
+  color: #92400e;
+}
+
+.filter-button svg,
+.clear-highlights-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.clear-highlights-button {
+  color: #dc2626;
+}
+
+.clear-highlights-button:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+/* ==================== 高亮按钮 ==================== */
+.highlight-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #cbd5e0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.highlight-button:hover {
+  color: #f59e0b;
+  background: #fffbeb;
+}
+
+.highlight-button.active {
+  color: #f59e0b;
+}
+
+.highlight-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ==================== 筛选空状态 ==================== */
+.filter-empty-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.filter-empty-hint .empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.filter-empty-hint p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.filter-empty-hint .hint-text {
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+/* ==================== 响应式设计（练习题） ==================== */
+@media (max-width: 768px) {
+  .view-toggle-group {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .view-select-wrapper {
+    gap: 0.25rem;
+  }
+
+  .view-select-label {
+    font-size: 0.85rem;
+  }
+
+  .view-select {
+    padding: 0.4rem 1.75rem 0.4rem 0.6rem;
+    font-size: 0.85rem;
+    min-width: 120px;
+  }
+
+  .view-toggle-button {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .question-bank-container {
+    padding: 1rem;
+  }
+
+  .header-title {
+    font-size: 1.25rem;
+  }
+
+  .question-item {
+    padding: 1rem;
+  }
+
+  .question-content {
+    font-size: 0.95rem;
+  }
+
+  .question-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .filter-button,
+  .clear-highlights-button {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .highlight-button {
+    padding: 0.2rem;
+  }
+
+  .highlight-button svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ========================================
+   Toast提示样式
+   ======================================== */
+.toast {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.3s ease;
+  z-index: 10000;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-success {
+  background: rgba(34, 197, 94, 0.95);
+}
+
+.toast-error {
+  background: rgba(239, 68, 68, 0.95);
+}
+
+.toast-info {
+  background: rgba(59, 130, 246, 0.95);
+}
+
+/* ========================================
+   保存按钮样式
+   ======================================== */
+.save-drawing-button {
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  color: rgba(34, 197, 94, 1);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.save-drawing-button:hover {
+  background: rgba(34, 197, 94, 0.3);
+  border-color: rgba(34, 197, 94, 0.8);
+}
+
+.save-drawing-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+
+/* ==================== 代码折叠样式 ==================== */
+
+/* 代码块包装器 - 折叠状态 */
+.code-wrapper.collapsed .code-block {
+  display: none;
+}
+
+/* 代码块包装器 - 展开状态 */
+.code-wrapper.expanded .code-block {
+  display: block;
+  animation: slideDown 0.3s ease-out;
+}
+
+/* 下滑动画 */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    transform: translateY(0);
+  }
+}
+
+/* 代码头部样式增强 */
+.code-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px 8px 0 0;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* 折叠/展开按钮样式 */
+.toggle-code-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.toggle-code-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-code-btn:active {
+  transform: translateY(0);
+}
+
+.toggle-code-btn svg {
+  transition: transform 0.2s ease;
+}
+
+/* 代码标签（Python）*/
+.code-label {
+  flex: 1;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* 运行按钮样式增强 */
+.run-code-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.run-code-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.run-code-btn:active {
+  transform: translateY(0);
+}
+
+.run-code-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 输出显示样式 - 静态输出（来自notebook） */
+.code-output {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 0 0 8px 8px;
+  padding: 1rem;
+  margin-top: 0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #212529;
+}
+
+/* 输出显示样式 - 动态输出（浏览器执行） */
+.code-output-dynamic {
+  background: #f1f3f5;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.75rem;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #212529;
+}
+
+/* 输出文本 */
+.output-text pre {
+  margin: 0;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 输出图表 */
+.output-plot {
+  margin: 0.75rem 0;
+  text-align: center;
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.output-plot img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 输出HTML */
+.output-html {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+/* 错误输出 */
+.output-error {
+  background: #fff5f5;
+  border-left: 4px solid #f56565;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.error-title {
+  color: #c53030;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.output-error pre {
+  margin: 0;
+  color: #742a2a;
+  font-size: 0.8125rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 加载状态 */
+.output-loading {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+/* 旋转动画（用于执行中的图标）*/
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 输出成功状态 */
+.output-success {
+  border-color: #48bb78;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .code-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .toggle-code-btn,
+  .run-code-btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+  }
+  
+  .code-label {
+    font-size: 0.75rem;
+  }
+}
