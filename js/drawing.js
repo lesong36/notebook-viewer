@@ -94,10 +94,16 @@ export function redrawCanvas() {
 // 调整 Canvas 大小
 export function resizeCanvas() {
     const canvas = state.canvas;
-    if (!canvas) return;
+    if (!canvas) {
+        console.log('[resizeCanvas] ⚠️ canvas is null');
+        return;
+    }
 
     const contentWrapper = document.getElementById('content-wrapper');
-    if (!contentWrapper) return;
+    if (!contentWrapper) {
+        console.log('[resizeCanvas] ⚠️ contentWrapper is null');
+        return;
+    }
 
     const outlinePanel = document.getElementById('outline-panel');
     const isOutlineCollapsed = outlinePanel?.classList.contains('collapsed');
@@ -113,6 +119,8 @@ export function resizeCanvas() {
     canvas.style.position = 'fixed';
     canvas.style.top = '56px';
     canvas.style.left = outlineWidth + 'px';
+
+    console.log(`[resizeCanvas] ✅ Canvas: ${width}x${height}, left=${outlineWidth}px, rect=`, canvas.getBoundingClientRect());
 
     redrawCanvas();
 }
