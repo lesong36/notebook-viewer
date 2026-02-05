@@ -39,6 +39,11 @@ function initApp() {
         if (fileNameEl && !state.currentFileName) {
             fileNameEl.textContent = `v${VERSION}`;
         }
+        const debugVersionEl = document.getElementById('debug-version');
+        if (debugVersionEl) {
+            debugVersionEl.textContent = `v${VERSION}`;
+        }
+        console.log(`[Notebook Viewer] v${VERSION}`);
     }, 100);
 }
 
