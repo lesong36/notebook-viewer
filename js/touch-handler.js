@@ -398,10 +398,11 @@ export function initTouchHandlers() {
     };
 
     // 绑定事件
+    // ✨ 使用 passive: true 允许默认滚动，只在 Apple Pencil 绘制时动态阻止
     document.addEventListener('mousedown', handlers.mousedown, true);
     document.addEventListener('mousemove', handlers.mousemove);
     document.addEventListener('mouseup', handlers.mouseup);
-    document.addEventListener('touchstart', handlers.touchstart, { passive: false, capture: true });
+    document.addEventListener('touchstart', handlers.touchstart, { passive: false });
     document.addEventListener('touchmove', handlers.touchmove, { passive: false });
     document.addEventListener('touchend', handlers.touchend);
     document.addEventListener('pointermove', handlers.pointermove, { passive: true });

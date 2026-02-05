@@ -2,6 +2,9 @@
  * config.js - 全局配置和状态管理
  */
 
+// 版本号
+export const VERSION = '1.0.2';
+
 // 全局状态
 export const state = {
     currentNotebook: null,

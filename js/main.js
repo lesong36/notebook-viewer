@@ -2,7 +2,7 @@
  * main.js - 主入口
  */
 
-import { state, initCanvas } from './config.js';
+import { state, initCanvas, VERSION } from './config.js';
 import { initDebugPanel } from './debug-panel.js';
 import { initTouchHandlers } from './touch-handler.js';
 import {
@@ -33,6 +33,11 @@ function initApp() {
         const contentWrapper = document.getElementById('content-wrapper');
         if (contentWrapper) {
             contentWrapper.addEventListener('scroll', redrawCanvas);
+        }
+        // 显示版本号
+        const fileNameEl = document.getElementById('file-name');
+        if (fileNameEl && !state.currentFileName) {
+            fileNameEl.textContent = `v${VERSION}`;
         }
     }, 100);
 }
