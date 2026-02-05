@@ -175,8 +175,15 @@ export function initTouchHandlers() {
 
             const contentWrapper = document.getElementById('content-wrapper');
             const rect = contentWrapper.getBoundingClientRect();
+            const canvasRect = state.canvas?.getBoundingClientRect();
+
+            // 📊 详细边界日志（用于诊断右侧无法涂鸦问题）
+            const boundaryInfo = `touch(${Math.round(touch.clientX)},${Math.round(touch.clientY)}) wrapper[${Math.round(rect.left)}-${Math.round(rect.right)}] canvas[${canvasRect ? Math.round(canvasRect.left) + '-' + Math.round(canvasRect.right) : 'null'}]`;
+
             if (touch.clientX < rect.left || touch.clientX > rect.right ||
                 touch.clientY < rect.top || touch.clientY > rect.bottom) {
+                // ⚠️ 边界检查失败：记录详细信息
+                addDebugLog(`⛔ 边界外拒绝: ${boundaryInfo}`);
                 return;
             }
 
@@ -184,7 +191,6 @@ export function initTouchHandlers() {
             e.stopPropagation();
 
             const scrollTop = contentWrapper?.scrollTop || 0;
-            const canvasRect = state.canvas.getBoundingClientRect();
             const screenX = touch.clientX - canvasRect.left;
             const screenY = touch.clientY - canvasRect.top;
 
@@ -197,7 +203,7 @@ export function initTouchHandlers() {
             pendingStroke.confirmCount = 1;
             pendingStroke.scrollTop = scrollTop;
 
-            addDebugLog(`触摸开始：待确认 (count=1)`);
+            addDebugLog(`触摸开始: ${boundaryInfo}`);
         } else {
             // 🖐️ 手指触摸：追踪活跃触摸并清理状态
             hoverState.activeTouches++;

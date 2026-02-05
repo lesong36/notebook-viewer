@@ -552,6 +552,8 @@ body {
 .drawing-canvas.active {
     pointer-events: auto;
     cursor: crosshair;
+    /* ✨ 允许手指滚动，Apple Pencil 绘制由 JS 控制 */
+    touch-action: pan-x pan-y;
 }
 
 .empty-state {
